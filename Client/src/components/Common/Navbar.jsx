@@ -8,10 +8,14 @@ import {
 import SearchBar from "./SearchBar";
 import CartDrawer from "../Layout/CartDrawer";
 import { IoMdClose } from "react-icons/io";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+  const { cart } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
+  const cartItemCount = cart?.products?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   const toggleNavDrawer = () => {
     setNavDrawerOpen(!navDrawerOpen);
@@ -59,12 +63,14 @@ const Navbar = () => {
         </div>
         {/* Right - Icons */}
         <div className="flex item-center space-x-4">
-          <Link
-  to="/admin"
-  className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-md hover:from-gray-700 hover:to-gray-800 hover:shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500"
->
-  Admin Panel
-</Link>
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl shadow-md hover:from-gray-700 hover:to-gray-800 hover:shadow-lg transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Admin Panel
+            </Link>
+          )}
 
           <Link to="/profile" className="text-e-black ">
             <HiOutlineUser className="h-6 w-6 mt-1 text-e-black hover:text-e-hover" />
@@ -74,9 +80,11 @@ const Navbar = () => {
             className="relative  text-e-black hover:text-e-hover"
           >
             <HiOutlineShoppingBag className="h-6 w-6 text-e-black hover:text-e-hover" />
-            <span className="absolute -top-1 bg-e-black text-white text-xs rounded-full px-2 py-0.5">
-              2
-            </span>
+            {cartItemCount > 0 && (
+              <span className="absolute -top-1 bg-e-black text-white text-xs rounded-full px-2 py-0.5">
+                {cartItemCount}
+              </span>
+            )}
           </button>
           {/* Search */}
           <div className="overflow-hidden">

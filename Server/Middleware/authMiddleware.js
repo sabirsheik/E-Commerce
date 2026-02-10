@@ -29,6 +29,44 @@ const auth = async (req, res, next) => {
   }
 };
 
+const optionalAuth = async (req, res, next) => {
+  try {
+    let token = req.headers.authorization;
+    if (!token) {
+      // No token, proceed as guest
+      req.user = null;
+      req.userId = null;
+      return next();
+    }
+
+    token = token.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Invalid token, proceed as guest
+        req.user = null;
+        req.userId = null;
+        return next();
+      }
+
+      const user = await User.findById(decoded.id).select("-password");
+      if (!user) {
+        req.user = null;
+        req.userId = null;
+        return next();
+      }
+
+      req.user = user;      
+      req.userId = user._id;
+      next();
+    });
+  } catch (error) {
+    req.user = null;
+    req.userId = null;
+    next();
+  }
+};
+
 const checkRole = async (req, res, next) => {
   try {
     const user = await User.findById(req.userId);
@@ -43,5 +81,6 @@ const checkRole = async (req, res, next) => {
 
 module.exports = {
   auth,
+  optionalAuth,
   checkRole,
 };

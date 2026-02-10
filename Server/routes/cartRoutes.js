@@ -8,12 +8,13 @@ cartMerge,
 } = require("../controllers/cartControllers");
 const {
     auth,
+    optionalAuth,
 } = require("../Middleware/authMiddleware");
 
-router.post("/create", auth, postCart)
-router.put("/update", auth, updateCartQuantity)
-router.delete("/delete", auth, updateCartQuantity)
-router.get("/carts", auth, getCarts);
+router.post("/create", optionalAuth, postCart)
+router.put("/update", optionalAuth, updateCartQuantity)
+router.delete("/delete", optionalAuth, updateCartQuantity)
+router.get("/carts", optionalAuth, getCarts);
 router.post("/merge", auth, cartMerge);
 
 

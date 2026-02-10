@@ -1,24 +1,49 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { registerUser } from "../redux/slices/authSlices";
-import { useDispatch } from "react-redux";
+import { mergeCart } from "../redux/slices/CartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({
     name: "",
     email: "",
     password: "",
   });
   const dispatch = useDispatch();
+  const { user: loggedInUser, guestID, loading, error } = useSelector((state) => state.auth);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser({ ...user, [name]: value });
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("user register", user);
-     dispatch(registerUser({name: user.name, email: user.email, password: user.password }));
+    dispatch(registerUser({ name: user.name, email: user.email, password: user.password }));
   };
+
+  useEffect(() => {
+    if (loggedInUser) {
+      // Merge guest cart after registration
+      dispatch(mergeCart({ guestId: guestID })).then(() => {
+        toast.success("Registered successfully!");
+        // Navigate to the intended page or home
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
+      });
+    }
+  }, [loggedInUser, dispatch, guestID, navigate, location]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
   return (
     <>
       <div className="flex">
@@ -91,12 +116,13 @@ const Register = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-e-black text-white p-2 rounded font-semibold hover:bg-e-hover transation-all duration-500"
+              disabled={loading}
+              className="w-full bg-e-black text-white p-2 rounded font-semibold hover:bg-e-hover transation-all duration-500 disabled:opacity-50"
             >
-              Login
+              {loading ? "Registering..." : "Register"}
             </button>
             <p className="mt-6 text-center text-sm">
-              Don't have an account?
+              Already have an account?
               <Link to="/login" className="text-blue-600">
                 Login
               </Link>

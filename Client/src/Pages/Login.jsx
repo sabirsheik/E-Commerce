@@ -1,24 +1,47 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../redux/slices/authSlices";
-import { useDispatch } from "react-redux";
+import { mergeCart } from "../redux/slices/CartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 const Login = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState({
     email: "",
     password: "",
   });
   const dispatch = useDispatch();
+  const { user: loggedInUser, guestID, loading, error } = useSelector((state) => state.auth);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser({ ...user, [name]: value });
-
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("User login", user);
-    dispatch(loginUser({ email : user.email, password : user.password}));
+    dispatch(loginUser({ email: user.email, password: user.password }));
   };
+
+  useEffect(() => {
+    if (loggedInUser) {
+      // Merge guest cart after login
+      dispatch(mergeCart({ guestId: guestID })).then(() => {
+        toast.success("Logged in successfully!");
+        // Navigate to the intended page or home
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
+      });
+    }
+  }, [loggedInUser, dispatch, guestID, navigate, location]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
   return (
     <>
       <div className="flex">
@@ -33,7 +56,7 @@ const Login = () => {
             </div>
             <h2 className="text-2xl font-bold text-center mb-6">Hey there!</h2>
             <p className="text-center mb-6">
-              Enter you username and password to login
+              Enter your username and password to login
             </p>
             <div className="mb-4">
               <label
@@ -73,9 +96,10 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-e-black text-white p-2 rounded font-semibold hover:bg-e-hover transation-all duration-500"
+              disabled={loading}
+              className="w-full bg-e-black text-white p-2 rounded font-semibold hover:bg-e-hover transation-all duration-500 disabled:opacity-50"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
             <p className="mt-6 text-center text-sm">
               Don't have an account?
